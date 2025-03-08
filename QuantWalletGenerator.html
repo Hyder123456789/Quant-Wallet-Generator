@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>QNT Paper Wallet Generator</title>
+  <style>
+    /* Enhanced QNT wallet styling in pure Black and White */
+    body {
+      margin: 0;
+      padding: 20px;
+      background-color: #FFFFFF;
+      font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+      color: #000000;
+    }
+    .wallet-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #FFF;
+      border: 2px solid #000;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .button-container {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .action-btn {
+      display: inline-block;
+      margin: 0 10px 20px;
+      padding: 15px 25px;
+      background-color: #000;
+      color: #fff;
+      border: none;
+      font-size: 18px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .wallet {
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(6, auto);
+      gap: 10px;
+    }
+    .panel {
+      padding: 20px;
+      background-color: #FFF;
+      border: 2px solid #000;
+      border-radius: 10px;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+      position: relative;
+    }
+    .panel.header {
+      background-color: #000;
+      color: #FFF;
+      text-align: center;
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      border-radius: 10px;
+    }
+    .panel h2 {
+      margin-top: 0;
+      margin-bottom: 10px;
+      font-size: 20px;
+      border-bottom: 1px solid #000;
+      padding-bottom: 5px;
+    }
+    .qr-code {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .key-text {
+      word-wrap: break-word;
+      font-family: monospace;
+      font-size: 16px;
+      background-color: #f9f9f9;
+      padding: 15px;
+      border: 2px solid #000;
+      border-radius: 8px;
+    }
+    /* Hide elements with .no-print class when printing */
+    .no-print {
+      display: block;
+    }
+    @media print {
+      .no-print {
+        display: none !important;
+      }
+      body {
+        padding: 0;
+      }
+      .wallet-container {
+        box-shadow: none;
+        border: none;
+      }
+    }
+  </style>
+  <!-- Use the UMD build of ethers.js for improved compatibility -->
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <!-- Include QRCode.js for QR code generation -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <div class="wallet-container">
+    <div class="button-container no-print">
+      <button id="gen-keys-btn" class="action-btn" onclick="generateWallet()">Generate New Keys</button>
+      <button class="action-btn" onclick="window.print()">Print Paper Wallet</button>
+    </div>
+    <div class="wallet">
+      <!-- Panel 1: Cover with QNT branding -->
+      <div class="panel header">
+        QNT PAPER WALLET
+        <div style="margin-top:15px;">
+          <!-- Replace with your black and white Quant logo image -->
+          <img src="CompanyLOGO.png" alt="Quant Logo" style="max-width: 120px; border-radius: 5px;">
+        </div>
+      </div>
+      <!-- Panel 2: Public Key Text -->
+      <div class="panel">
+        <h2>Public Key</h2>
+        <div class="key-text" id="pub-key">
+          Loading...
+        </div>
+      </div>
+      <!-- Panel 3: Public Key QR Code -->
+      <div class="panel">
+        <h2>Public Key QR Code</h2>
+        <div class="qr-code" id="pub-qr"></div>
+      </div>
+      <!-- Panel 4: Private Key Text -->
+      <div class="panel">
+        <h2>Private Key</h2>
+        <div class="key-text" id="priv-key">
+          Loading...
+        </div>
+      </div>
+      <!-- Panel 5: Private Key QR Code -->
+      <div class="panel">
+        <h2>Private Key QR Code</h2>
+        <div class="qr-code" id="priv-qr"></div>
+      </div>
+      <!-- Panel 6: Security & Instructions -->
+      <div class="panel">
+        <h2>Important Security Info</h2>
+        <p style="font-size:16px; line-height:1.5;">
+          Keep your private key secure and offline. If someone gains access to your private key, your funds can be compromised.
+          Print this wallet and store it in a safe location. Consider making multiple copies for backup.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Function to generate a new wallet and update the page
+    function generateWallet() {
+      if (typeof ethers === "undefined") {
+        console.error("ethers.js library not loaded. Please check your script tag or network connection.");
+        document.getElementById("pub-key").innerText = "Error: ethers.js not loaded";
+        document.getElementById("priv-key").innerText = "Error: ethers.js not loaded";
+        return;
+      }
+      try {
+        const wallet = ethers.Wallet.createRandom();
+        console.log("Generated wallet:", wallet);
+        
+        // Update key text
+        document.getElementById("pub-key").innerText = wallet.address;
+        document.getElementById("priv-key").innerText = wallet.privateKey;
+        
+        // Clear previous QR codes
+        document.getElementById("pub-qr").innerHTML = "";
+        document.getElementById("priv-qr").innerHTML = "";
+        
+        // Generate new QR codes
+        new QRCode(document.getElementById("pub-qr"), {
+          text: wallet.address,
+          width: 140,
+          height: 140,
+          colorDark: "#000000",
+          colorLight: "#FFFFFF",
+        });
+        new QRCode(document.getElementById("priv-qr"), {
+          text: wallet.privateKey,
+          width: 140,
+          height: 140,
+          colorDark: "#000000",
+          colorLight: "#FFFFFF",
+        });
+      } catch (err) {
+        console.error("Error generating wallet:", err);
+        document.getElementById("pub-key").innerText = "Error generating wallet";
+        document.getElementById("priv-key").innerText = "Error generating wallet";
+      }
+    }
+    
+    // Generate a wallet when the page loads
+    window.addEventListener("load", generateWallet);
+  </script>
+</body>
+</html>
